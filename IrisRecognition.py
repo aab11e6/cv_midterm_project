@@ -2,6 +2,11 @@ import os
 import cv2
 import numpy as np
 
+from sklearn.metrics import roc_curve, auc
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
+from sklearn.neighbors import NearestCentroid
 # Import other modules
 from IrisLocalization import iris_localization
 from IrisNormalization import iris_normalization
@@ -9,6 +14,7 @@ from ImageEnhancement import image_enhancement
 from FeatureExtraction import feature_extraction
 from IrisMatching import iris_matching
 from PerformanceEvaluation import performance_evaluation
+from sklearn.metrics.pairwise import euclidean_distances
 
 import pickle
 
@@ -105,6 +111,66 @@ def iris_recognition():
         
         # Step 6: Performance Evaluation (optional, depending on mode)
         performance_evaluation(match_result, metric)
+
+        f1, f2 = roc(training_features, testing_features, metric)
+        print(f1)
+        print(f2)
+
+
+def roc(training_features, testing_features, metric):
+    # Get matching results and classifier from iris_matching
+    train_labels = [label for label, _ in training_features]
+    train_feature_vectors = np.array([vector for _, vector in training_features])
+    lda = LDA(n_components=min(len(np.unique(train_labels)) - 1, 150))
+    reduced_train_features = lda.fit_transform(train_feature_vectors, train_labels)
+    clf = NearestCentroid(metric=metric)
+    clf.fit(reduced_train_features, train_labels)
+    
+    # Define the ground truth
+    # ground_truth = [i // 4 + 1 for i in range(len(testing_features))]
+    
+    # Calculate FMR and FNMR at different thresholds for ROC calculation
+    thresholds = np.linspace(-20, 20, 30)  # Example threshold values for similarity score
+    fmr_list = []
+    fnmr_list = []
+    
+    for threshold in thresholds:
+        false_match = 0
+        false_non_match = 0
+        total_imposters = 0
+        total_genuine = 0
+        
+        for label, test_feature_vector in testing_features:
+            reduced_test_feature = lda.transform([test_feature_vector])
+            distance = euclidean_distances(reduced_test_feature, clf.centroids_).min()
+            similarity_score = -distance  # Negative distance for similarity
+            
+            if label == clf.predict(reduced_test_feature)[0]:  # Genuine match
+                total_genuine += 1
+                if similarity_score < threshold:
+                    false_non_match += 1
+            else:  # Imposter
+                total_imposters += 1
+                if similarity_score >= threshold:
+                    false_match += 1
+        
+        fmr = false_match / total_imposters if total_imposters > 0 else 0
+        fnmr = false_non_match / total_genuine if total_genuine > 0 else 0
+        fmr_list.append(fmr)
+        fnmr_list.append(fnmr)
+    
+    # Plot ROC curve
+    plt.figure()
+    plt.plot(fmr_list, fnmr_list, color='darkorange', lw=2, label='ROC Curve')
+    plt.xlabel('False Match Rate (FMR)')
+    plt.ylabel('False Non-Match Rate (FNMR)')
+    plt.title(f'Receiver Operating Characteristic ({metric})')
+    plt.legend(loc='lower right')
+    plt.show()
+    
+    return fmr_list, fnmr_list
+
+
 
 if __name__ == "__main__":
     iris_recognition()
