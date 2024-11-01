@@ -26,14 +26,14 @@ def iris_localization(person_id, image):
     # Step 1: Estimate pupil center using vertical and horizontal projection
     vertical_projection = np.sum(binary_image, axis=1)
     horizontal_projection = np.sum(binary_image, axis=0)
-    center_y = np.argmin(vertical_projection)
+    center_y = np.argmin(vertical_projection) + 10
     center_x = np.argmin(horizontal_projection)
-    cv2.circle(image, (center_x, center_y), 5, (0, 0, 255), -1)  # Draw red dot at estimated center # 调试用
+    # cv2.circle(image, (center_x, center_y), 5, (0, 0, 255), -1)  # Draw red dot at estimated center # 调试用
     
     # Step 1: Detect the inner boundary (pupil region)
     circles = None
-    param1 = 150
-    param2 = 60
+    param1 = 200
+    param2 = 80
     filtered_circles = []
     while param2 > 0 and (circles is None or not filtered_circles):
         param1 = 120
@@ -45,7 +45,7 @@ def iris_localization(person_id, image):
                 circles = np.around(circles)[0].astype(int)
                 
                 # Filter circles based on distance to inner circle and select the one with the largest radius
-                center_diff_range = 10
+                center_diff_range = 14
                 filtered_circles = [c for c in circles if np.sqrt((c[0] - center_x)**2 + (c[1] - center_y)**2) < center_diff_range]
                 if filtered_circles:
                     inner_circle = min(filtered_circles, key=lambda c: c[2])  # Select the first detected circle as the inner boundary
@@ -57,7 +57,7 @@ def iris_localization(person_id, image):
         param2 -= 5
     
     # Step 2: Detect the outer boundary (iris region)
-    min_radius_for_outer = int(inner_boundary[2] * 1.5)  # Set minimum radius based on inner circle's radius
+    min_radius_for_outer = int(inner_boundary[2] * 1.8)  # Set minimum radius based on inner circle's radius
     
     circles = None
     param1 = 120

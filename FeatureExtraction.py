@@ -8,7 +8,7 @@ Created on Wed Oct 30 14:29:52 2024
 import numpy as np
 import cv2
 
-def feature_extraction(enhanced_image):
+def feature_extraction(enhanced_image, params):
     # Extract features using a bank of Gabor filters in multiple directions and scales
     orientations = [0, np.pi / 4, np.pi / 2, 3 * np.pi / 4]  # Different orientations (0, 45, 90, 135 degrees)
     scales = [4.0, 8.0, 16.0]  # Different scales (frequencies)
@@ -16,7 +16,7 @@ def feature_extraction(enhanced_image):
 
     for theta in orientations:
         for sigma in scales:
-            gabor_kernel = cv2.getGaborKernel((21, 21), sigma, theta, 10.0, 0.5, 0, ktype=cv2.CV_32F)
+            gabor_kernel = cv2.getGaborKernel(params['ksize'], sigma, theta, params['lambda'], params['gamma'], 0, ktype=cv2.CV_32F)
             filtered_image = cv2.filter2D(enhanced_image, cv2.CV_8UC3, gabor_kernel)
             filtered_images.append(filtered_image)
 
