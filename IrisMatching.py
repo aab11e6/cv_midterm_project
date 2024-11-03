@@ -16,6 +16,7 @@ def iris_matching(training_features, testing_features, metric):
     train_feature_vectors = np.array([vector for _, vector in training_features])
 
     lda = LDA(n_components=min(len(np.unique(train_labels)) - 1, 150))
+    # lda = LDA(n_components=150)
     reduced_train_features = lda.fit_transform(train_feature_vectors, train_labels)
     
     # Classify each testing feature using Nearest Centroid Classifier
