@@ -18,7 +18,7 @@ from sklearn import metrics
 
 import warnings
 
-# Ignure FutureWarning and UserWarning
+# Ignore FutureWarning and UserWarning
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=UserWarning)
 
@@ -59,7 +59,6 @@ def iris_recognition():
     training_features = []
     for person_id, image in training_images:
         try:
-    
             # Step 1: Iris Localization
             inner_boundary, outer_boundary = iris_localization(person_id, image)
             
@@ -104,51 +103,105 @@ def iris_recognition():
         
     # with open('training_features.pkl', 'rb') as file:
     #     training_features = pickle.load(file)
-        
+            
     # with open('testing_features.pkl', 'rb') as file:
     #     testing_features = pickle.load(file)
     
-    
-    ## Ellie -------------------------------------------------------------------------
-    for metric in ['euclidean', 'manhattan', 'cosine']:
-    
-        # Step 5: Iris Matching
-        match_result = iris_matching(training_features, testing_features, metric)
+    ## Ellie --------------------------------------------------------------------------
+
+    ## OUTPUT 1: TABLE 3
+
+    # Origion feature set 
+    ori_festure_result = [] # to store the accuracy using different metrics
+    for metric in ['manhattan', 'euclidean', 'cosine']:
         
+            # Step 5: Iris Matching
+            match_result = iris_matching_table3(training_features, testing_features, metric)
+
+            # Step 6: Performance Evaluation (optional, depending on mode)
+            accuracy = performance_evaluation(match_result, metric)
+
+            ori_festure_result.append(accuracy)
+
+    # Reduced festure set
+    red_festure_result = [] # to store the accuracy using different metrics
+    for metric in ['manhattan', 'euclidean', 'cosine']:
+        
+            # Step 5: Iris Matching
+            match_result = iris_matching(training_features, testing_features, metric)
+
+            # Step 6: Performance Evaluation (optional, depending on mode)
+            accuracy = performance_evaluation(match_result, metric)
+
+            red_festure_result.append(accuracy)
+
+    # Create Table 3 to out put the accuracy
+    table3 = PrettyTable()
+    table3.field_names = ["Similarity measure", "Accuracy of Original feature set (%)", "Accuracy of Reduced feature set (%)"]
+    table3.add_row(["L1 distance measure", f"{ori_festure_result[0]:.2f}", f"{red_festure_result[0]:.2f}"])
+    table3.add_row(["L2 distance measure", f"{ori_festure_result[1]:.2f}", f"{red_festure_result[1]:.2f}"])
+    table3.add_row(["Cosine similarity measure", f"{ori_festure_result[2]:.2f}", f"{red_festure_result[2]:.2f}"])
+
+    print('Table 3. Recognition Results Using Different Similarity Measures')
+    print(table3)
+
+    ## OUTPUT 2: FIGURE 10
+
+    # Set different feature dimentionality
+    n_values = list(range(10, 101, 10))
+
+    recognition_rates = [] # to store the accuracy using different feature dimentionality
+    for n in n_values:
+        # Step 5: Iris Matching
+        match_result = iris_matching_figure10(training_features, testing_features, metric, n)
+
         # Step 6: Performance Evaluation (optional, depending on mode)
-        performance_evaluation(match_result, metric)
+        accuracy = performance_evaluation(match_result, 'cosine')
+
+        recognition_rates.append(accuracy)
+
+    # Create Figure 10
+    plt.figure()
+    plt.plot(n_values, recognition_rates, marker='x', linestyle='-', color='black')
+    plt.xlabel('Dimensionality of the feature vector')
+    plt.ylabel('Correct recognition rate')
+    plt.title('Fig 10. Recognition results using features of different dimensionality')
+    plt.grid(True)
+    plt.ylim([50, 100])
+    plt.show()
     
     
     ## Huishan --------------------------------------------------------------------------
-    ## Get the cosine similarity results
-    cos_prediction, cos_dist = iris_matching_classifier(training_features, testing_features, metric='cosine')
+    # Get the cosine similarity results
+    cos_prediction, cos_dist = iris_matching_table4(training_features, testing_features, metric='cosine')
 
-    ## Generate FMR-FNMR table
+    # Generate FMR-FNMR table
     thresholds = [0.526, 0.601, 0.761]
     roc_results = [roc(cos_dist, cos_prediction, threshold) for threshold in thresholds]
 
-    ## Create table to display results
-    table = PrettyTable(['Threshold', 'False Match Rate (%)', 'False Non-Match Rate (%)'])
+    # Create Table 4
+    table4 = PrettyTable(['Threshold', 'False Match Rate (%)', 'False Non-Match Rate (%)'])
     for threshold, (fm, fnm, _, _) in zip(thresholds, roc_results):
-        table.add_row([threshold, fm, fnm])
+        table4.add_row([threshold, fm, fnm])
 
     print("Table 4. False Match and False Non-Match Rates with Different Threshold Values")
-    print(table)
+    print(table4)
     print()
 
-    ## Curve evaluation (cosine distance)
+    # Curve evaluation (cosine distance)
     thresh_range = np.arange(0.1, 0.7, 0.01)
     metrics = [roc(cos_dist, cos_prediction, t) for t in thresh_range]
 
     fm, fnm, tpr, fpr = zip(*metrics)
 
-    ## Prepare and plot ROC curve
+    # Create Figure 11
+    # Prepare and plot ROC curve
     print("Preparing the ROC curve...\n")
     plt.figure()
     plt.plot(fm, fnm, linewidth=2, color='blue', label='ROC Curve')
     plt.xlabel('False Match Rate (FMR)')
     plt.ylabel('False Non-Match Rate (FNMR)')
-    plt.title('Receiver Operating Characteristic (Cosine Similarity)')
+    plt.title('Fig 11. Receiver Operating Characteristic (Cosine Similarity)')
     plt.legend(loc='lower right')
     plt.show()
 

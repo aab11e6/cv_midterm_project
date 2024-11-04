@@ -1,0 +1,41 @@
+Explain the whole logic of your design.
+    1. Iris Localization:
+        Step 1: Estimate the pupil center
+        Since pupil is always black, we use binary thresholding to create a binary image and project onto x- and y-axes. 
+        Locate the pupil center based on the maximum values in these projections.
+        
+        Step 2: Detect the inner boundary (Pupil)
+        Use Hough Circle Transform with gradually decreasing parameters to detect circles.
+        Filter circles by proximity to the estimated center and select the smallest as the inner boundary.
+    
+        Step 3: Detect Outer Boundary (Iris)
+        Set the minimum radius based on the inner boundary radius.
+        Use Hough Circle Transform with gradually decreasing parameters to detect larger circles.
+    
+    2. Iris Normalization:
+        Convert to Polar Coordinates: Map the iris region from Cartesian to polar coordinates based on the pupil center and iris boundaries.
+        Set the normalized image to 64x360 pixels.
+        We then delineated the region of interesting in a space of 48*240, which is the lower half of the iris, and attenuated the lower eyelids.
+    
+    3. Image Enhancement:
+        Apply a threshold to eliminate dark areas caused by eyelashes.
+        Enhance contrast by histogram equalization, improving feature visibility.
+
+    4. Feature Extraction:
+        Apply a set of Gabor filters with different orientations (0°, 45°, 90°, 135°) and scales (4.0, 8.0, 16.0) to capture texture details.
+        According to paper, divide each filtered image into 8x8 blocks, then calculate the mean and standard deviation for each block.
+        Combine the mean and standard deviation values from all blocks into a single feature vector.
+
+    5. Iris Matching:
+        Use Fisher Linear Discriminant (FLD) to reduce feature dimensions, preserving essential class distinctions.
+        Apply the Nearest Centroid Classifier with a specified distance metric (L1, L2, or cosine) to categorize test features.
+        Transform each test feature and predict its class based on the trained classifier.
+
+Briefly discuss the limitation(s) of the current design. How can you improve it?
+Limitation: The design assumes that the input images are consistent in terms of lighting, angle, and scale, which may not hold true in practical applications where irises can vary greatly due to head tilt, lighting changes, or camera distance.
+Improvement: Implement data augmentation techniques (varying brightness, rotation, and scaling) to create a more robust model that generalizes well to diverse conditions.
+
+Peer evaluation form
+Haiwen Kou - 
+Jiaqi Li - Performance Evaluation (Table 3 & Figure 10), README File, Comments of Code
+Shan Hui - 

@@ -16,16 +16,17 @@ def iris_matching(training_features, testing_features, metric):
     train_feature_vectors = np.array([vector for _, vector in training_features])
 
     lda = LDA(n_components=min(len(np.unique(train_labels)) - 1, 150))
-    # lda = LDA(n_components=150)
     reduced_train_features = lda.fit_transform(train_feature_vectors, train_labels)
     
     # Classify each testing feature using Nearest Centroid Classifier
     clf = NearestCentroid(metric=metric)
     clf.fit(reduced_train_features, train_labels)
     
-    match_results = []
+    match_results = [] # to store the matching result
     for _, test_feature_vector in testing_features:
+        # Apply FLD feature dimensionality reduction
         reduced_test_feature = lda.transform([test_feature_vector])
+        # Predict the lable of test feature vector using classifier
         match_result = clf.predict(reduced_test_feature)[0]
         match_results.append(match_result)
     
