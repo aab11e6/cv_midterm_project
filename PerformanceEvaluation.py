@@ -7,7 +7,8 @@ from random import randint
 from sklearn.metrics.pairwise import cosine_distances
 
 def performance_evaluation(match_results, metric):
-    # Define the ground truth
+
+    # Create the ture classification of test image
     ground_truth = [i // 4 + 1 for i in range(432)]
     
     # Calculate the correct matches
@@ -19,10 +20,50 @@ def performance_evaluation(match_results, metric):
     
     # Calculate and print the accuracy
     accuracy = (correct_matches / len(match_results)) * 100
-    print(f"{metric} Accuracy: {accuracy:.2f}%")
-    return (correct_matches / len(match_results)) * 100
+    # print(f"{metric} Accuracy: {accuracy:.2f}%")
+    return accuracy
+
+def iris_matching_table3(training_features, testing_features, metric):
+    # Assuming training_features and testing_features are lists of tuples (label, feature_vector)
+    train_labels = [label for label, _ in training_features]
+    train_feature_vectors = np.array([vector for _, vector in training_features])
     
-def iris_matching_classifier(training_features, testing_features, metric):
+    # Classify each testing feature using Nearest Centroid Classifier
+    clf = NearestCentroid(metric=metric)
+    clf.fit(train_feature_vectors, train_labels)
+    
+    match_results = [] # to store the matching result
+    for _, test_feature_vector in testing_features:
+        # Predict the lable of test feature vector using classifier
+        match_result = clf.predict([test_feature_vector])[0]
+        match_results.append(match_result)
+    
+    return match_results
+
+def iris_matching_figure10(training_features, testing_features, metric, n):
+    # Perform dimensionality reduction using Fisher Linear Discriminant (FLD)
+    # Assuming training_features and testing_features are lists of tuples (label, feature_vector)
+    train_labels = [label for label, _ in training_features]
+    train_feature_vectors = np.array([vector for _, vector in training_features])
+
+    lda = LDA(n_components=min(len(np.unique(train_labels)) - 1, n))
+    reduced_train_features = lda.fit_transform(train_feature_vectors, train_labels)
+    
+    # Classify each testing feature using Nearest Centroid Classifier
+    clf = NearestCentroid(metric=metric)
+    clf.fit(reduced_train_features, train_labels)
+    
+    match_results = [] # to store the matching result
+    for _, test_feature_vector in testing_features:
+        # Apply FLD feature dimensionality reduction
+        reduced_test_feature = lda.transform([test_feature_vector])
+        # Predict the lable of test feature vector using classifier
+        match_result = clf.predict(reduced_test_feature)[0]
+        match_results.append(match_result)
+    
+    return match_results
+    
+def iris_matching_table4(training_features, testing_features, metric):
     # Perform dimensionality reduction using Fisher Linear Discriminant (FLD)
     # Assuming training_features and testing_features are lists of tuples (label, feature_vector)
     train_labels = [label for label, _ in training_features]

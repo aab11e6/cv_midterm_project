@@ -36,6 +36,7 @@ def iris_normalization(image, inner_boundary, outer_boundary):
     # Generate the normalized image by sampling the original image at the calculated coordinates
     normalized_image = image[y, x]
     
+    # Only use lower half and inner part of iris to eliminate the influence of eyelashes and noise of eyelids
     normalized_image = normalized_image[:240,:32]
     
     # plt.imshow(normalized_image, cmap='gray')
