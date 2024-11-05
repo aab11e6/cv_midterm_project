@@ -173,32 +173,47 @@ def iris_recognition():
     
     ## Huishan --------------------------------------------------------------------------
     # Get the cosine similarity results
+    # Perform iris matching using the cosine distance metric, getting the predicted labels and distances.
     cos_prediction, cos_dist = iris_matching_table4(training_features, testing_features, metric='cosine')
 
     # Generate FMR-FNMR table
-    thresholds = [0.526, 0.601, 0.761]
+    # Define the threshold values to evaluate different matching performance scenarios.
+    thresholds = [0.526, 0.601, 0.652]
+
+    # Calculate ROC metrics for each threshold value using the cosine distance results.
     roc_results = [roc(cos_dist, cos_prediction, threshold) for threshold in thresholds]
 
     # Create Table 4
+    # Initialize a PrettyTable object with columns for threshold, False Match Rate (FMR), and False Non-Match Rate (FNMR).
     table4 = PrettyTable(['Threshold', 'False Match Rate (%)', 'False Non-Match Rate (%)'])
+
+    # Populate Table 4 with the calculated metrics for each threshold value.
     for threshold, (fm, fnm, _, _) in zip(thresholds, roc_results):
         table4.add_row([threshold, fm, fnm])
 
+    # Print the FMR-FNMR table
     print("Table 4. False Match and False Non-Match Rates with Different Threshold Values")
     print(table4)
     print()
 
     # Curve evaluation (cosine distance)
+    # Generate the range of threshold values to evaluate the ROC curve.
     thresh_range = np.arange(0.1, 0.7, 0.01)
+
+    # Calculate ROC metrics for each value in the threshold range.
     metrics = [roc(cos_dist, cos_prediction, t) for t in thresh_range]
 
+    # Extract the False Match Rate, False Non-Match Rate, True Positive Rate, and False Positive Rate from the results.
     fm, fnm, tpr, fpr = zip(*metrics)
 
     # Create Figure 11
     # Prepare and plot ROC curve
     print("Preparing the ROC curve...\n")
     plt.figure()
+    # Plot the ROC curve with False Match Rate (FMR) on the x-axis and False Non-Match Rate (FNMR) on the y-axis.
     plt.plot(fm, fnm, linewidth=2, color='blue', label='ROC Curve')
+
+    # Add axis labels, a title, and a legend to the plot.
     plt.xlabel('False Match Rate (FMR)')
     plt.ylabel('False Non-Match Rate (FNMR)')
     plt.title('Fig 11. Receiver Operating Characteristic (Cosine Similarity)')
